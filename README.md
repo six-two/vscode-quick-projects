@@ -1,10 +1,8 @@
 # VS Code Quick Projects extension
 
-This is the README for your extension "sixtwo-quickprojects". After writing up a brief description, we recommend including the following sections.
-
 This is a plugin to quickly open a subfolder of one of your favourite directories (say `~/Documents` or `~/code`) as a new project.
 There are similar extensions like <https://github.com/kurt67/vscode-projects>, but it seems overly complicated with stuff like caching, etc.
-My goal with this extension is to have an very simple extension (one single JavaScript file, no TypeScript, etc) that is easy to customize.
+My goal with this extension is to have an simple extension (one single JavaScript file, no TypeScript, etc) that is easy to customize.
 
 ## Installation
 
@@ -33,6 +31,9 @@ There are also keyboard shortcuts of the format `Ctrl-Alt-X` for each command, w
 
 The settings specify which folders the extension uses as your base-folder for personal, external, and work projects.
 You can also choose whether projects should be opened in the current window or in a new window.
+
+You can open the settings by opening the general VS Code settings (`Code` -> `Settings...` -> `Settings`).
+Then expand the `Extensions` category and scroll down to `Quick Projects`.
 
 ## Release Notes / Changelog
 
