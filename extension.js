@@ -10,16 +10,19 @@ const os = require('os');
 const getListOfChildDirectories = async (directoryPathList) => {
     let items = [];
     for (const rootDir of directoryPathList) {
-        try {
-            const fileNames = await fs.readdir(rootDir)
-            console.debug(fileNames);
-            items.push(...fileNames.map(name => ({
-                label: name,
-                description: `${rootDir}/${name}`,
-            })));
-        } catch (error) {
-            console.error(error);
-            vscode.window.showErrorMessage(`Failed to list or open directory: ${error}`);
+        // Skip empty values
+        if (rootDir) {
+            try {
+                const fileNames = await fs.readdir(rootDir)
+                console.debug(fileNames);
+                items.push(...fileNames.map(name => ({
+                    label: name,
+                    description: `${rootDir}/${name}`,
+                })));
+            } catch (error) {
+                console.error(error);
+                vscode.window.showErrorMessage(`Failed to list or open directory: ${error}`);
+            }
         }
     }
     console.debug(items);
@@ -41,7 +44,11 @@ const listSubDirectoriesAndOpenTheOneTheUserChooses = async (directoryPathList) 
         }
 
         // Show the quick pick menu
-        vscode.window.showQuickPick(items).then(async selectedItem => {
+        vscode.window.showQuickPick(items, {
+            placeHolder: 'Please select a project folder to open',
+            matchOnDescription: false,
+            matchOnDetail: false
+        }).then(async selectedItem => {
             if (selectedItem) {
                 // Open the directory in VSCode
                 const openInNewWindow = false;
@@ -63,19 +70,36 @@ const registerMyCommand = (context, name, directoryListToSearch) => {
     context.subscriptions.push(disposable);
 }
 
+const expandHome = (path) => {
+    if (!path) {
+        // Handle cases like null or undefined
+        return ""
+    } else if (path.startsWith("~")) {
+        return os.homedir() + path.slice(1);
+    } else {
+        return path
+    }
+}
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-    const personalProjects = os.homedir() + '/c';
-    const externalProjects = os.homedir() + '/r';
-    const workProjects = os.homedir() + '/projects/2024';
-
-    registerMyCommand(context, "personal", [personalProjects]);
-    registerMyCommand(context, "external", [externalProjects]);
-    registerMyCommand(context, "work", [workProjects]);
-    registerMyCommand(context, "all", [personalProjects, externalProjects, workProjects]);
+    try {
+        // TODO: Is there a way to reload this when the config changes?
+        const config = vscode.workspace.getConfiguration('quickProjects');
+        const personalProjects = expandHome(config.get("personalDir"));
+        const externalProjects = expandHome(config.get("externalDir"));
+        const workProjects = expandHome(config.get("workDir"));
+    
+        registerMyCommand(context, "personal", [personalProjects]);
+        registerMyCommand(context, "external", [externalProjects]);
+        registerMyCommand(context, "work", [workProjects]);
+        registerMyCommand(context, "any", [personalProjects, externalProjects, workProjects]);
+    } catch (error) {
+        console.error(error);
+        vscode.window.showErrorMessage(`Unexpected error during initialization: ${error}`);
+    }
 }
 
 // This method is called when your extension is deactivated

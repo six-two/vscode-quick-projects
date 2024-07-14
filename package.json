@@ -26,8 +26,51 @@
         "title": "Quick Projects: Open work project"
       },
       {
-        "command": "sixtwo-quickprojects.choose-all",
+        "command": "sixtwo-quickprojects.choose-any",
         "title": "Quick Projects: Open any project"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Quick Projects",
+      "properties": {
+        "quickProjects.personalDir": {
+          "type": "string",
+          "default": "~/c",
+          "description": "The folder where you keep your personal projects"
+        },
+        "quickProjects.externalDir": {
+          "type": "string",
+          "default": "~/r",
+          "description": "The folder where you keep external projects (stuff you just cloned, but do not edit)"
+        },
+        "quickProjects.workDir": {
+          "type": "string",
+          "default": "",
+          "description": "The folder where you keep work projects"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "sixtwo-quickprojects.choose-personal",
+        "key": "ctrl+alt+p",
+        "mac": "ctrl+alt+p"
+      },
+      {
+        "command": "sixtwo-quickprojects.choose-external",
+        "key": "ctrl+alt+e",
+        "mac": "ctrl+alt+e"
+      },
+      {
+        "command": "sixtwo-quickprojects.choose-work",
+        "key": "ctrl+alt+w",
+        "mac": "ctrl+alt+w"
+      },
+      {
+        "command": "sixtwo-quickprojects.choose-any",
+        "key": "ctrl+alt+a",
+        "mac": "ctrl+alt+a"
       }
     ]
   },

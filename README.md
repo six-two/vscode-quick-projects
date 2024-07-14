@@ -1,4 +1,4 @@
-# sixtwo-quickprojects README
+# VS Code Quick Projects extension
 
 This is the README for your extension "sixtwo-quickprojects". After writing up a brief description, we recommend including the following sections.
 
