@@ -51,7 +51,7 @@ const listSubDirectoriesAndOpenTheOneTheUserChooses = async (directoryPathList) 
         }).then(async selectedItem => {
             if (selectedItem) {
                 // Open the directory in VSCode
-                const openInNewWindow = false;
+                const openInNewWindow = getConfigOption("openInNewWindow");
                 // The description stores the full path to the item
                 const url = vscode.Uri.file(selectedItem.description);
                 vscode.commands.executeCommand('vscode.openFolder', url, openInNewWindow)
@@ -64,8 +64,8 @@ const listSubDirectoriesAndOpenTheOneTheUserChooses = async (directoryPathList) 
     }
 }
 
-const registerMyCommand = (context, name, directoryListToSearch) => {
-    const disposable = vscode.commands.registerCommand(`sixtwo-quickprojects.choose-${name}`, () => listSubDirectoriesAndOpenTheOneTheUserChooses(directoryListToSearch));
+const registerMyCommand = (context, name, directoryListFunction) => {
+    const disposable = vscode.commands.registerCommand(`sixtwo-quickprojects.choose-${name}`, () => listSubDirectoriesAndOpenTheOneTheUserChooses(directoryListFunction()));
 
     context.subscriptions.push(disposable);
 }
@@ -81,21 +81,20 @@ const expandHome = (path) => {
     }
 }
 
+const getConfigOption = (name) => {
+    return vscode.workspace.getConfiguration('quickProjects')
+        .get(name);
+}
+
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-    try {
-        // TODO: Is there a way to reload this when the config changes?
-        const config = vscode.workspace.getConfiguration('quickProjects');
-        const personalProjects = expandHome(config.get("personalDir"));
-        const externalProjects = expandHome(config.get("externalDir"));
-        const workProjects = expandHome(config.get("workDir"));
-    
-        registerMyCommand(context, "personal", [personalProjects]);
-        registerMyCommand(context, "external", [externalProjects]);
-        registerMyCommand(context, "work", [workProjects]);
-        registerMyCommand(context, "any", [personalProjects, externalProjects, workProjects]);
+    try {    
+        registerMyCommand(context, "personal", () => [expandHome(getConfigOption("personalDir"))]);
+        registerMyCommand(context, "external", () => [expandHome(getConfigOption("externalDir"))]);
+        registerMyCommand(context, "work", () => [expandHome(getConfigOption("workDir"))]);
+        registerMyCommand(context, "any", () => [expandHome(getConfigOption("personalDir")), expandHome(getConfigOption("externalDir")), expandHome(getConfigOption("workDir"))]);
     } catch (error) {
         console.error(error);
         vscode.window.showErrorMessage(`Unexpected error during initialization: ${error}`);
