@@ -1,89 +1,87 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-// const vscode = require('vscode');
-
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-
-/**
- * @param {vscode.ExtensionContext} context
- */
-// function activate(context) {
-
-// 	// Use the console to output diagnostic information (console.log) and errors (console.error)
-// 	// This line of code will only be executed once when your extension is activated
-// 	console.log('Congratulations, your extension "sixtwo-quickprojects" is now active!');
-
-// 	// The command has been defined in the package.json file
-// 	// Now provide the implementation of the command with  registerCommand
-// 	// The commandId parameter must match the command field in package.json
-// 	const disposable = vscode.commands.registerCommand('sixtwo-quickprojects.helloWorld', function () {
-// 		// The code you place here will be executed every time your command is executed
-
-// 		// Display a message box to the user
-// 		vscode.window.showInformationMessage('Hello World from quick-projects!');
-// 	});
-
-// 	context.subscriptions.push(disposable);
-// }
-
 const vscode = require('vscode');
 const fs = require('fs').promises;
 const os = require('os');
 
-function activate(context) {
-  let disposable = vscode.commands.registerCommand('sixtwo-quickprojects.helloWorld', async () => {
-    try {
-      // Define the path to the directory
-      const directoryPath = os.homedir() + '/c';
-
-      // Read the contents of the directory
-      const items = await fs.readdir(directoryPath);
-
-      // Filter out only directories
-      const dirs = await Promise.all(items.map(item => {
-        return fs.stat(`${directoryPath}/${item}`).then(stat => stat.isDirectory());
-      }));
-
-      // Filter items array to include only directories
-      const filteredItems = items.filter((_, index) => dirs[index]);
-
-      // Prepare the items for the quick pick menu
-      const itemsForMenu = filteredItems.map(item => ({
-        label: item,
-        description: item,
-        detail: item
-      }));
-
-      // Show the quick pick menu
-      vscode.window.showQuickPick(itemsForMenu).then(async selectedItem => {
-        if (selectedItem) {
-			// Construct the full path of the selected item
-			const fullPath = `${directoryPath}/${selectedItem.label}`;
-
-			// Open the directory in VSCode
-			const openInNewWindow = false;
-			const url = vscode.Uri.file(fullPath);
-			vscode.commands.executeCommand('vscode.openFolder', url, openInNewWindow).then(
-				() => { },
-				e => vscode.window.showInformationMessage(`Project directory open failed: ${e}`)
-			);
-		}
-      });
-    } catch (error) {
-      console.error(error);
-      vscode.window.showErrorMessage('Failed to list or open directory.');
+/**
+ * 
+ * @param {*} directoryPathList a list of all directories to search
+ * @returns a list of {label: name of folder, description: full path} that can be used with the quick pick menu
+ */
+const getListOfChildDirectories = async (directoryPathList) => {
+    let items = [];
+    for (const rootDir of directoryPathList) {
+        try {
+            const fileNames = await fs.readdir(rootDir)
+            console.debug(fileNames);
+            items.push(...fileNames.map(name => ({
+                label: name,
+                description: `${rootDir}/${name}`,
+            })));
+        } catch (error) {
+            console.error(error);
+            vscode.window.showErrorMessage(`Failed to list or open directory: ${error}`);
+        }
     }
-  });
+    console.debug(items);
 
-  context.subscriptions.push(disposable);
+    const isDir = await Promise.all(items.map(item => {
+        return fs.stat(item.description).then(stat => stat.isDirectory());
+    }));
+
+    return items.filter((_, index) => isDir[index])
+}
+
+const listSubDirectoriesAndOpenTheOneTheUserChooses = async (directoryPathList) => {
+    try {
+        // Read the contents of the directory
+        const items = getListOfChildDirectories(directoryPathList);
+        if (!items) {
+            vscode.window.showInformationMessage("No child directories found");
+            return;
+        }
+
+        // Show the quick pick menu
+        vscode.window.showQuickPick(items).then(async selectedItem => {
+            if (selectedItem) {
+                // Open the directory in VSCode
+                const openInNewWindow = false;
+                // The description stores the full path to the item
+                const url = vscode.Uri.file(selectedItem.description);
+                vscode.commands.executeCommand('vscode.openFolder', url, openInNewWindow)
+                    .catch(e => vscode.window.showErrorMessage(`Project directory open failed: ${e}`));
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        vscode.window.showErrorMessage(`Unexpected error: ${error}`);
+    }
+}
+
+const registerMyCommand = (context, name, directoryListToSearch) => {
+    const disposable = vscode.commands.registerCommand(`sixtwo-quickprojects.choose-${name}`, () => listSubDirectoriesAndOpenTheOneTheUserChooses(directoryListToSearch));
+
+    context.subscriptions.push(disposable);
 }
 
 
+/**
+ * @param {vscode.ExtensionContext} context
+ */
+function activate(context) {
+    const personalProjects = os.homedir() + '/c';
+    const externalProjects = os.homedir() + '/r';
+    const workProjects = os.homedir() + '/projects/2024';
+
+    registerMyCommand(context, "personal", [personalProjects]);
+    registerMyCommand(context, "external", [externalProjects]);
+    registerMyCommand(context, "work", [workProjects]);
+    registerMyCommand(context, "all", [personalProjects, externalProjects, workProjects]);
+}
+
 // This method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() { }
 
 module.exports = {
-	activate,
-	deactivate
+    activate,
+    deactivate
 }

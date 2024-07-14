@@ -12,10 +12,24 @@
   "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
-    "commands": [{
-      "command": "sixtwo-quickprojects.helloWorld",
-      "title": "Hello World"
-    }]
+    "commands": [
+      {
+        "command": "sixtwo-quickprojects.choose-personal",
+        "title": "Quick Projects: Open personal project"
+      },
+      {
+        "command": "sixtwo-quickprojects.choose-external",
+        "title": "Quick Projects: Open external project"
+      },
+      {
+        "command": "sixtwo-quickprojects.choose-work",
+        "title": "Quick Projects: Open work project"
+      },
+      {
+        "command": "sixtwo-quickprojects.choose-all",
+        "title": "Quick Projects: Open any project"
+      }
+    ]
   },
   "scripts": {
     "lint": "eslint .",
